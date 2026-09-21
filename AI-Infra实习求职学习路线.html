@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Infra 推理优化方向 · 9个月学习路线</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230B1220'/%3E%3Cpath d='M9 21V11h3l4 6 4-6h3v10h-3v-5l-3.5 5h-1L12 16v5z' fill='%233ED5C1'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap">
+<style>
+  :root{
+    --bg:#0B1220;
+    --panel:#101A2E;
+    --panel2:#14213A;
+    --line:rgba(148,178,255,.14);
+    --txt:#E7EDF8;
+    --muted:#8FA1C4;
+    --teal:#3ED5C1;
+    --amber:#F2B35C;
+    --blue:#6C9BFF;
+    --mono:ui-monospace,"Cascadia Code",Consolas,"JetBrains Mono",monospace;
+    --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--txt);font-family:var(--sans);line-height:1.75;font-size:15px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  a{color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(108,155,255,.35)}
+  a:hover{color:var(--teal);border-bottom-color:var(--teal)}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(62,213,193,.1);color:#8FE8DC;padding:1px 6px;border-radius:4px}
+
+  /* ===== Hero ===== */
+  .hero{position:relative;padding:64px 0 48px;border-bottom:1px solid var(--line);
+    background:radial-gradient(1200px 500px at 20% -10%,rgba(62,213,193,.14),transparent 60%),radial-gradient(900px 420px at 90% 0%,rgba(108,155,255,.12),transparent 55%)}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.22em;color:var(--teal);text-transform:uppercase;border:1px solid rgba(62,213,193,.35);border-radius:999px;padding:4px 14px;margin-bottom:22px}
+  .kicker svg{width:13px;height:13px;flex:none}
+  .hero h1{font-size:clamp(28px,4.2vw,44px);line-height:1.2;font-weight:900;letter-spacing:.01em;max-width:18em}
+  .hero h1 em{font-style:normal;color:var(--teal)}
+  .hero .sub{margin-top:16px;color:var(--muted);max-width:46em;font-size:15.5px}
+  .hero .sub b{color:var(--txt)}
+  .hero .meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 18px;min-width:146px}
+  .stat b{display:block;font-size:22px;font-weight:900;color:var(--teal);font-family:var(--mono)}
+  .stat span{font-size:12.5px;color:var(--muted)}
+
+  /* ===== Section scaffolding ===== */
+  section{padding:52px 0;border-bottom:1px solid var(--line)}
+  .sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:10px}
+  .sec-num{font-family:var(--mono);font-size:15px;color:var(--amber);font-weight:700}
+  .sec-head h2{font-size:26px;font-weight:900;letter-spacing:.02em}
+  .sec-desc{color:var(--muted);margin-bottom:26px;max-width:62em}
+  .sec-desc b{color:var(--txt)}
+  .notice{background:rgba(242,179,92,.07);border:1px solid rgba(242,179,92,.3);border-radius:12px;padding:13px 18px;font-size:13.5px;color:#EFD9B4;margin-bottom:26px}
+
+  /* ===== 路线总览 ===== */
+  .phase-strip{display:flex;width:100%;height:44px;border-radius:8px;overflow:hidden;margin-bottom:14px;border:1px solid var(--line)}
+  .phase-strip div{display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#0B1220;white-space:nowrap}
+  .phase-strip div:nth-child(1){background:#5B6B8F;width:2.7%}
+  .phase-strip div:nth-child(2){background:var(--blue);width:21.6%}
+  .phase-strip div:nth-child(3){background:#7FA0EE;width:21.6%}
+  .phase-strip div:nth-child(4){background:var(--teal);width:21.6%}
+  .phase-strip div:nth-child(5){background:#7ED7CB;width:21.6%}
+  .phase-strip div:nth-child(6){background:var(--amber);width:10.9%}
+  .strip-legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12.5px;color:var(--muted);margin-bottom:34px}
+  .strip-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .strip-legend b{color:#D7E1F4;font-weight:500}
+
+  /* ===== 时间轴 ===== */
+  .tl{display:grid;grid-template-columns:104px 46px 1fr;gap:0 18px}
+  .tl-row{display:contents}
+  .t-time{font-family:var(--mono);font-size:12px;color:var(--amber);text-align:right;padding-top:28px;line-height:1.6}
+  .t-axis{position:relative}
+  .t-line{position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);background:linear-gradient(180deg,transparent,var(--line) 4%,var(--line) 96%,transparent)}
+  .t-dot{position:sticky;top:0;display:block;width:13px;height:13px;border-radius:50%;background:var(--teal);border:3px solid var(--bg);box-shadow:0 0 0 2px var(--teal);justify-self:center;margin-top:32px}
+  .tl-row:last-child .t-line{bottom:auto;height:calc(100% - 30px)}
+  .t-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin-bottom:18px;min-width:0;overflow-wrap:anywhere}
+  .t-card h3{font-size:18px;font-weight:900;margin-bottom:2px;line-height:1.4}
+  .t-card h3 .wk{display:block;font-family:var(--mono);font-size:12.5px;color:var(--amber);font-weight:500;margin-top:2px}
+  .t-goal{font-size:13.5px;color:var(--teal);margin:8px 0 14px}
+  .t-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .t-col h5{font-size:13px;color:var(--muted);letter-spacing:.06em;margin-bottom:8px}
+  .t-col ul{list-style:none}
+  .t-col li{font-size:13.5px;padding:4px 0 4px 18px;position:relative;color:#D7E1F4}
+  .t-col li::before{content:"";position:absolute;left:0;top:13px;width:7px;height:7px;border-radius:2px;background:var(--teal);opacity:.75}
+  .t-col li .src{color:var(--blue);font-size:12.5px}
+
+  /* ===== 产出/检测勾选清单 ===== */
+  .chk-list{list-style:none;display:flex;flex-direction:column;gap:2px}
+  .chk{display:flex;gap:10px;align-items:flex-start;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13.5px;color:#D7E1F4;line-height:1.55}
+  .chk:hover{background:rgba(62,213,193,.06)}
+  .chk input{flex:none;width:16px;height:16px;margin-top:4px;accent-color:var(--teal);cursor:pointer}
+  .chk input:checked + span{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(143,161,196,.65)}
+  .cnt{display:inline-block;font-family:var(--mono);font-size:11.5px;color:var(--amber);background:rgba(242,179,92,.12);border:1px solid rgba(242,179,92,.35);border-radius:999px;padding:0 9px;margin-left:8px;vertical-align:1px}
+
+  /* ===== 资源库 ===== */
+  .res-table{width:100%;border-collapse:collapse;table-layout:fixed}
+  .res-table colgroup col:nth-child(1){width:13%}
+  .res-table colgroup col:nth-child(2){width:26%}
+  .res-table colgroup col:nth-child(3){width:36%}
+  .res-table colgroup col:nth-child(4){width:25%}
+  .res-table th,.res-table td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top;font-size:13px}
+  .res-table th{background:var(--panel2);color:var(--muted);font-size:12.5px}
+  .res-table td:nth-child(2){color:var(--txt);font-weight:500}
+  .res-table td:nth-child(3){font-size:12.3px;word-break:break-all}
+  .res-table td:nth-child(4){color:var(--muted);font-size:12.3px}
+  .res-table tr:hover td{background:rgba(62,213,193,.04)}
+
+  /* ===== Footer ===== */
+  footer{padding:34px 0 56px;color:var(--muted);font-size:12.5px}
+  footer a{font-size:12.3px}
+
+  .backtop{position:fixed;right:26px;bottom:26px;width:44px;height:44px;border-radius:50%;background:var(--panel2);border:1px solid var(--teal);color:var(--teal);font-size:18px;cursor:pointer;z-index:50;font-family:var(--sans);line-height:1}
+  .backtop:hover{background:rgba(62,213,193,.15)}
+
+  @media (max-width:820px){
+    .t-cols{grid-template-columns:1fr}
+    .tl{grid-template-columns:88px 34px 1fr;gap:0 10px}
+    .t-time{font-size:11px}
+    .stat{min-width:120px}
+    .backtop{width:38px;height:38px;right:16px;bottom:16px;font-size:15px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 视图：Hero ===== -->
+<div class="hero">
+  <div class="wrap">
+    <span class="kicker">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 15V9l3 4 3-4v6"/></svg>
+      AI INFRA · 学习路线 · 2026-09-21 起算
+    </span>
+    <h1>9 个月学习路线：<em>大模型推理优化 / 推理引擎</em></h1>
+    <p class="sub">主攻方向已确定。以下为 37 周（2026-09-21 ~ 2027-06-13）分阶段学习计划：每阶段标注具体日期、学习内容与<b>可逐条勾选的产出/检测清单</b>，附全部中文学习资源（B站视频 + 国内文档）。勾选进度保存在本机浏览器，可随时接着过。</p>
+    <div class="meta">
+      <div class="stat"><b>2026-09-21</b><span>起点（第 0 周）</span></div>
+      <div class="stat"><b>2027-06-13</b><span>终点（第 37 周）</span></div>
+      <div class="stat"><b>6 阶段</b><span>每阶段含勾选清单</span></div>
+      <div class="stat"><b>全中文</b><span>B站视频 + 国内文档</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 视图：01 学习路线与时间安排 ===== -->
+<section id="s1">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">01</span><h2>学习路线与时间安排（按周执行）</h2></div>
+    <p class="sec-desc">起点 2026-09-21（周一），每周一为新阶段起点。按「全日制准备每天 4–6 小时」估算；在校兼顾可把每阶段拉长 30%，第 4 阶段起<b>边投递边学习</b>。勾选框可点选，完成后自动划线，进度保存在本机浏览器。</p>
+    <div class="notice"><b>说明：</b>主攻推理优化，但 AI Infra 实习普遍同时考察训练侧知识，因此第 4 阶段安排分布式训练基础（并行策略、DeepSpeed/ZeRO）作为必修加分项，保证简历和面试两端都能打。</div>
+    <div class="phase-strip">
+      <div>0</div><div>P1 编程地基</div><div>P2 深度学习</div><div>P3 推理引擎</div><div>P4 分布式+项目</div><div>P5 求职</div>
+    </div>
+    <div class="strip-legend">
+      <span><i style="background:#5B6B8F"></i><b>第 0 周</b> 2026-09-21 ~ 09-27 准备</span>
+      <span><i style="background:var(--blue)"></i><b>第 1–8 周</b> 2026-09-28 ~ 11-22 编程与计算机基础</span>
+      <span><i style="background:#7FA0EE"></i><b>第 9–16 周</b> 2026-11-23 ~ 2027-01-17 深度学习与大模型</span>
+      <span><i style="background:var(--teal)"></i><b>第 17–24 周</b> 2027-01-18 ~ 03-14 推理引擎核心（主攻）</span>
+      <span><i style="background:#7ED7CB"></i><b>第 25–32 周</b> 2027-03-15 ~ 05-09 分布式训练 + 项目</span>
+      <span><i style="background:var(--amber)"></i><b>第 33–37 周</b> 2027-05-10 ~ 06-13 求职冲刺</span>
+    </div>
+
+    <div class="tl">
+      <div class="tl-row">
+        <div class="t-time">2026-09-21<br>~ 09-27<br>第 0 周</div>
+        <div class="t-axis"><span class="t-line"></span><span class="t-dot"></span></div>
+        <div class="t-card">
+          <h3>阶段 0 · 环境与方向确认<span class="wk">2026-09-21 ~ 2026-09-27</span></h3>
+          <div class="t-goal">目标：搭好环境，把本路线变成自己的打卡表</div>
+          <div class="t-cols">
+            <div class="t-col">
+              <h5>学什么</h5>
+              <ul>
+                <li>安装 WSL2 或购买云服务器（Ubuntu 22.04+），熟练 Linux 命令行（<span class="src">《Linux 就该这么学》/ 鸟哥私房菜</span>）</li>
+                <li>装好 Python 3.10+、VS Code、Git，配置国内 pip 镜像（清华/阿里）</li>
+                <li>注册 GitHub，关注学习源：李沐 B站（<span class="src">space.bilibili.com/1567748478</span>）、DataWhale、AI Infra 相关公众号</li>
+              </ul>
+            </div>
+            <div class="t-col">
+              <h5>产出 / 检测<span class="cnt" id="cnt0">0/7</span></h5>
+              <div id="p0" class="chk-list">
+                <label class="chk"><input type="checkbox" id="p0-1"><span>WSL2 或云服务器可用，能通过 SSH 登录</span></label>
+                <label class="chk"><input type="checkbox" id="p0-2"><span>Linux 命令行熟练：文件操作（ls/cd/cp/mv/rm/find）、进程管理（ps/top/kill）、网络操作（curl/ping/ss）</span></label>
+                <label class="chk"><input type="checkbox" id="p0-3"><span>Python 3.10+、VS Code、Git 装好，pip 换国内源后能正常安装包</span></label>
+                <label class="chk"><input type="checkbox" id="p0-4"><span>GitHub 注册完成，创建仓库并成功 push 一个 README</span></label>
+                <label class="chk"><input type="checkbox" id="p0-5"><span>关注学习源：李沐 B站、DataWhale、至少 1 个 AI Infra 公众号</span></label>
+                <label class="chk"><input type="checkbox" id="p0-6"><span>制定每日 4–6 小时作息表，把 6 个阶段的清单抄进自己的打卡表</span></label>
+                <label class="chk"><input type="checkbox" id="p0-7"><span>里程碑：写一篇 200 字「我的 9 个月计划」到仓库 README</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="t-time">2026-09-28<br>~ 11-22<br>第 1–8 周</div>
+        <div class="t-axis"><span class="t-line"></span><span class="t-dot"></span></div>
+        <div class="t-card">
+          <h3>阶段 1 · 编程与计算机基础<span class="wk">2026-09-28 ~ 2026-11-22</span></h3>
+          <div class="t-goal">目标：Python 熟练、C++ 能写、算法能刷、OS/网络有概念——这是所有 AI Infra 面试的第一关</div>
+          <div class="t-cols">
+            <div class="t-col">
+              <h5>学什么（顺序执行）</h5>
+              <ul>
+                <li>Python：B站「黑马程序员 Python 教程」，配合 <span class="src">菜鸟教程</span> 查文档</li>
+                <li>C++：B站「黑马程序员 C++」或「侯捷 C++」系列，重点：指针/引用/内存/STL/多线程</li>
+                <li>算法：<span class="src">代码随想录</span>（programmercarl.com）按顺序刷题 + LeetCode Hot 100</li>
+                <li>操作系统：B站「哈工大 李治军 操作系统」，重点：进程线程、内存、文件系统、锁</li>
+                <li>网络：B站「王道考研计算机网络」或「湖科大教书匠」，重点：TCP/IP、HTTP/gRPC、Socket</li>
+              </ul>
+            </div>
+            <div class="t-col">
+              <h5>产出 / 检测<span class="cnt" id="cnt1">0/10</span></h5>
+              <div id="p1" class="chk-list">
+                <label class="chk"><input type="checkbox" id="p1-1"><span>Python：跟完黑马教程 2/3 以上，能用 Python 读写文本/CSV/JSON 并处理异常</span></label>
+                <label class="chk"><input type="checkbox" id="p1-2"><span>Python：独立写出一个命令行小工具（如日志分析/文件批量处理），带参数解析</span></label>
+                <label class="chk"><input type="checkbox" id="p1-3"><span>C++：掌握指针、引用、内存管理、STL 容器与算法，能独立完成字符串/链表类题目</span></label>
+                <label class="chk"><input type="checkbox" id="p1-4"><span>C++：实现一个线程池（任务队列 + 工作线程 + 互斥锁/条件变量），能解释原理</span></label>
+                <label class="chk"><input type="checkbox" id="p1-5"><span>算法：代码随想录按顺序过完数组/链表/哈希/字符串/栈队列/二叉树/回溯/贪心/动态规划专题</span></label>
+                <label class="chk"><input type="checkbox" id="p1-6"><span>算法：LeetCode Hot 100 完成一轮（每天 2–3 题），每题能独立写出并讲清复杂度</span></label>
+                <label class="chk"><input type="checkbox" id="p1-7"><span>操作系统：能脱稿答「进程 vs 线程」「死锁四条件」「虚拟内存/页表」</span></label>
+                <label class="chk"><input type="checkbox" id="p1-8"><span>网络：能脱稿答「三次握手四次挥手」「TCP vs UDP」「HTTP vs gRPC」</span></label>
+                <label class="chk"><input type="checkbox" id="p1-9"><span>把 Python 小工具、C++ 线程池、刷题记录全部整理进 GitHub 仓库（含 README 说明）</span></label>
+                <label class="chk"><input type="checkbox" id="p1-10"><span>里程碑：算法一轮 + 线程池 + 小工具三个硬产出齐备</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="t-time">2026-11-23<br>~ 2027-01-17<br>第 9–16 周</div>
+        <div class="t-axis"><span class="t-line"></span><span class="t-dot"></span></div>
+        <div class="t-card">
+          <h3>阶段 2 · 深度学习与大模型基础<span class="wk">2026-11-23 ~ 2027-01-17</span></h3>
+          <div class="t-goal">目标：理解神经网络与 Transformer，能训练/微调模型——后续所有推理优化都建立在这之上</div>
+          <div class="t-cols">
+            <div class="t-col">
+              <h5>学什么（顺序执行）</h5>
+              <ul>
+                <li>李沐《动手学深度学习》PyTorch 版：B站 + 中文站 <span class="src">zh.d2l.ai</span>（线性回归→CNN→RNN→注意力→Transformer）</li>
+                <li>3Blue1Brown《神经网络》系列（B站官方中文）建立直觉</li>
+                <li>李沐《论文精读》：Attention Is All You Need（Transformer 原文）</li>
+                <li>PyTorch 官方中文文档 + 60 分钟入门教程</li>
+                <li>LLM 概念：预训练/指令微调/RLHF 流程、自回归解码、Tokenizer、上下文窗口</li>
+              </ul>
+            </div>
+            <div class="t-col">
+              <h5>产出 / 检测<span class="cnt" id="cnt2">0/8</span></h5>
+              <div id="p2" class="chk-list">
+                <label class="chk"><input type="checkbox" id="p2-1"><span>动手学深度学习：跟完 PyTorch 版至注意力机制章节，每章代码都跑通</span></label>
+                <label class="chk"><input type="checkbox" id="p2-2"><span>用 PyTorch 从零实现 mini GPT（Tokenizer→Embedding→Transformer Block→采样生成），能生成通顺文本</span></label>
+                <label class="chk"><input type="checkbox" id="p2-3"><span>用开源小模型（如 Qwen2-0.5B）完成一次 LoRA 微调，训练与推理全部跑通</span></label>
+                <label class="chk"><input type="checkbox" id="p2-4"><span>能不看资料讲清：QKV 注意力、多头注意力、位置编码、LayerNorm、残差连接</span></label>
+                <label class="chk"><input type="checkbox" id="p2-5"><span>能讲清 LLM 流程：预训练/指令微调/RLHF、自回归解码、Tokenizer、上下文窗口</span></label>
+                <label class="chk"><input type="checkbox" id="p2-6"><span>写一篇博客（掘金/CSDN/公众号任选）记录 mini GPT 实现过程</span></label>
+                <label class="chk"><input type="checkbox" id="p2-7"><span>mini GPT 代码 + 博客链接整理进 GitHub 仓库</span></label>
+                <label class="chk"><input type="checkbox" id="p2-8"><span>里程碑：「从零实现 mini GPT」项目完成，能口头讲 5 分钟</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="t-time">2027-01-18<br>~ 03-14<br>第 17–24 周</div>
+        <div class="t-axis"><span class="t-line"></span><span class="t-dot"></span></div>
+        <div class="t-card">
+          <h3>阶段 3 · 推理引擎核心（主攻）<span class="wk">2027-01-18 ~ 2027-03-14</span></h3>
+          <div class="t-goal">目标：掌握 vLLM 的原理与优化手段，能独立部署、压测、调优——这是你与「推理优化」岗位的匹配点</div>
+          <div class="t-cols">
+            <div class="t-col">
+              <h5>学什么（顺序执行）</h5>
+              <ul>
+                <li>推理原理：Prefill/Decode、KV Cache、吞吐 vs 延迟</li>
+                <li>vLLM 部署实战：B站「Docker 与 vLLM 部署实战精讲」<span class="src">(BV1yXju61E7z)</span>、vLLM 中文文档 <span class="src">docs.vllm.com.cn</span></li>
+                <li>vLLM 原理精讲：B站「vLLM 原理详解」<span class="src">(BV1yx5v6VEM5)</span>、B站「vLLM 推理优化入门到精通」<span class="src">(BV14YopBEEGs)</span></li>
+                <li>核心机制专题：Continuous Batching、PagedAttention、CUDA Graph、投机采样、量化（AWQ/GPTQ/FP8）</li>
+                <li>读 vLLM 源码核心模块：scheduler、attention backend、engine</li>
+                <li>CUDA：B站「英伟达官方 现代CUDA编程」<span class="src">(BV1YC5y6QEmz)</span> → 手写向量加/矩阵乘；CSDN《手写 CUDA 算子让 PyTorch 提速 20 倍》</li>
+                <li>系统工具：Linux 性能分析 perf / nsys / ncu、Docker GPU 容器</li>
+              </ul>
+            </div>
+            <div class="t-col">
+              <h5>产出 / 检测<span class="cnt" id="cnt3">0/11</span></h5>
+              <div id="p3" class="chk-list">
+                <label class="chk"><input type="checkbox" id="p3-1"><span>能讲清 Prefill/Decode 两阶段、KV Cache 是什么、为什么能省算力省显存</span></label>
+                <label class="chk"><input type="checkbox" id="p3-2"><span>用 vLLM 部署 Qwen2-7B（或同级别）模型，启动 OpenAI 兼容服务，curl 调通</span></label>
+                <label class="chk"><input type="checkbox" id="p3-3"><span>自写压测脚本（或用 vllm benchmark），测并发 1/8/32/64 下的吞吐（tokens/s）与 TTFT/TPOT 延迟，输出报告</span></label>
+                <label class="chk"><input type="checkbox" id="p3-4"><span>量化对比实验：FP16 vs INT8 vs INT4（GPTQ/AWQ 任选），记录精度（困惑度/评测分）与性能差异</span></label>
+                <label class="chk"><input type="checkbox" id="p3-5"><span>能分别解释 Continuous Batching、PagedAttention、CUDA Graph、投机采样、PD 分离解决了什么问题</span></label>
+                <label class="chk"><input type="checkbox" id="p3-6"><span>读 vLLM 源码：scheduler、attention backend、engine 各读一遍核心流程，能画出模块关系图</span></label>
+                <label class="chk"><input type="checkbox" id="p3-7"><span>CUDA：跟完英伟达官方《现代CUDA编程》核心章节，理解线程层次与内存模型</span></label>
+                <label class="chk"><input type="checkbox" id="p3-8"><span>CUDA：手写向量加法、矩阵乘法 kernel，并用共享内存做一次优化，对比性能</span></label>
+                <label class="chk"><input type="checkbox" id="p3-9"><span>用 ncu/nsys 对 kernel 做一次性能分析，能定位瓶颈（访存/计算/延迟）并说明优化方向</span></label>
+                <label class="chk"><input type="checkbox" id="p3-10"><span>用 nvidia-smi/htop/perf 排查一次推理服务瓶颈（显存、GPU 利用率、CPU 瓶颈）</span></label>
+                <label class="chk"><input type="checkbox" id="p3-11"><span>进阶（选做）：给 vLLM 或相关开源项目提一个 PR（文档/测试/小优化均可）</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="t-time">2027-03-15<br>~ 05-09<br>第 25–32 周</div>
+        <div class="t-axis"><span class="t-line"></span><span class="t-dot"></span></div>
+        <div class="t-card">
+          <h3>阶段 4 · 分布式训练基础 + 项目深化<span class="wk">2027-03-15 ~ 2027-05-09</span></h3>
+          <div class="t-goal">目标：补齐实习 JD 普遍要求的分布式训练知识，把 2 个项目打磨到能写进简历</div>
+          <div class="t-cols">
+            <div class="t-col">
+              <h5>学什么（顺序执行）</h5>
+              <ul>
+                <li>并行策略：DP/TP/PP/EP/SP 原理（<span class="src">腾讯云开发者社区《大模型分布式训练并行策略详解》</span>、CSDN《DP/PP/TP/EP/SP 基本原理》）</li>
+                <li>显存优化：ZeRO 三阶段、FSDP（<span class="src">DeepSpeed 官方文档</span> deepspeed.ai）</li>
+                <li>通信基础：NCCL 原语（all-reduce / all-gather）、IB 网络概念</li>
+                <li>动手：单机多卡跑 PyTorch DDP；配置 DeepSpeed ZeRO-2/3 微调小模型</li>
+                <li>博客参考：博客园《手撸大模型的分布式训练》、<span class="src">汇尘轩 AI Infra 软核教程</span>（kirigaya.cn）</li>
+              </ul>
+            </div>
+            <div class="t-col">
+              <h5>产出 / 检测<span class="cnt" id="cnt4">0/10</span></h5>
+              <div id="p4" class="chk-list">
+                <label class="chk"><input type="checkbox" id="p4-1"><span>能画出 DP/TP/PP/EP/SP 五类并行示意图，并解释每种并行的通信开销与适用场景</span></label>
+                <label class="chk"><input type="checkbox" id="p4-2"><span>能讲清 ZeRO 三阶段分别切什么（优化器状态/梯度/参数）、FSDP 与 DeepSpeed 的关系</span></label>
+                <label class="chk"><input type="checkbox" id="p4-3"><span>单机多卡（2–4 卡）用 PyTorch DDP 跑通一个训练任务，记录并解释加速比</span></label>
+                <label class="chk"><input type="checkbox" id="p4-4"><span>用 DeepSpeed ZeRO-2/3 完成一次小模型微调，能解释配置项含义</span></label>
+                <label class="chk"><input type="checkbox" id="p4-5"><span>能讲清 NCCL 常用原语（all-reduce / all-gather / all-to-all）在训练中何时被调用</span></label>
+                <label class="chk"><input type="checkbox" id="p4-6"><span>项目 A：大模型推理服务优化（vLLM 部署 + 量化 + 压测 + 调优），输出完整报告与架构图</span></label>
+                <label class="chk"><input type="checkbox" id="p4-7"><span>项目 B（三选一）：Mini 推理引擎 / CUDA 算子优化（如 FlashAttention 简化版）/ 分布式训练小实验</span></label>
+                <label class="chk"><input type="checkbox" id="p4-8"><span>两个项目都能用 STAR 法则讲 5 分钟，能画架构图、说清瓶颈与取舍</span></label>
+                <label class="chk"><input type="checkbox" id="p4-9"><span>第 7 个月起开始投递日常实习（每周 10–20 个岗位），每周复盘一次</span></label>
+                <label class="chk"><input type="checkbox" id="p4-10"><span>里程碑：两个项目代码+报告进 GitHub，简历初版完成，投递已启动</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="t-time">2027-05-10<br>~ 06-13<br>第 33–37 周</div>
+        <div class="t-axis"><span class="t-line"></span><span class="t-dot"></span></div>
+        <div class="t-card">
+          <h3>阶段 5 · 求职冲刺<span class="wk">2027-05-10 ~ 2027-06-13</span></h3>
+          <div class="t-goal">目标：把 9 个月积累转化为 offer</div>
+          <div class="t-cols">
+            <div class="t-col">
+              <h5>学什么</h5>
+              <ul>
+                <li>面试八股：推理优化（vLLM/PagedAttention/KV Cache/量化/连续批处理）、分布式（并行策略/ZeRO/NCCL）、OS/网络/C++</li>
+                <li>手撕代码：LeetCode 中高频 + 简单系统设计（如「设计一个模型推理服务」）</li>
+                <li>项目复盘：用 STAR 法则讲清两个项目，预演 10 个高频追问</li>
+              </ul>
+            </div>
+            <div class="t-col">
+              <h5>产出 / 检测<span class="cnt" id="cnt5">0/8</span></h5>
+              <div id="p5" class="chk-list">
+                <label class="chk"><input type="checkbox" id="p5-1"><span>整理推理优化八股文档（vLLM/PagedAttention/KV Cache/量化/连续批处理），能脱稿讲清</span></label>
+                <label class="chk"><input type="checkbox" id="p5-2"><span>整理分布式八股（并行策略/ZeRO/NCCL）与系统八股（OS/网络/C++），形成自己的问答集</span></label>
+                <label class="chk"><input type="checkbox" id="p5-3"><span>手撕代码：LeetCode 中高频题过第二轮，每周保持 10 题手感</span></label>
+                <label class="chk"><input type="checkbox" id="p5-4"><span>系统设计练习：「设计一个 LLM 推理服务」能画架构图并讲清伸缩与优化点</span></label>
+                <label class="chk"><input type="checkbox" id="p5-5"><span>简历定稿：突出 2 个项目，量化指标（吞吐提升 X%、延迟降低 Y%），一页以内</span></label>
+                <label class="chk"><input type="checkbox" id="p5-6"><span>投递：Boss直聘 用推荐关键词持续投递，每周 10–20 个岗位，官网/内推并行</span></label>
+                <label class="chk"><input type="checkbox" id="p5-7"><span>每次面试后写复盘（问了什么/哪里没答好），下一周针对性补漏</span></label>
+                <label class="chk"><input type="checkbox" id="p5-8"><span>里程碑：保持每周 3–5 次面试节奏，拿到至少 1 个实习 offer</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 视图：02 中文资源库 ===== -->
+<section id="s2">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">02</span><h2>中文资源库（B站视频 + 国内文档）</h2></div>
+    <p class="sec-desc">按学习顺序归档，全部为中文或中文资料；标注 <b>「B站搜索」</b> 的请在哔哩哔哩内用关键词直接搜（链接更稳定的已给直链）。</p>
+    <table class="res-table">
+      <colgroup><col><col><col><col></colgroup>
+      <thead><tr><th>类别</th><th>资源</th><th>链接 / 获取方式</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>编程基础</td><td>黑马程序员 Python / C++</td><td>B站搜索「黑马程序员 Python」/「黑马程序员 C++」</td><td>中文免费跟练，零基础友好</td></tr>
+        <tr><td>编程基础</td><td>侯捷 C++ 系列</td><td>B站搜索「侯捷 C++」</td><td>进阶首选，重点 STL、内存管理</td></tr>
+        <tr><td>编程基础</td><td>菜鸟教程</td><td>runoob.com</td><td>查 Linux / Python / 基础语法</td></tr>
+        <tr><td>算法</td><td>代码随想录</td><td>programmercarl.com</td><td>按专题顺序刷题，配套 B站视频</td></tr>
+        <tr><td>算法</td><td>力扣 LeetCode</td><td>leetcode.cn</td><td>刷 Hot 100 / 面试高频题</td></tr>
+        <tr><td>系统基础</td><td>哈工大 · 李治军《操作系统》</td><td>B站搜索「李治军 操作系统」</td><td>经典中文系统课，重点进程/内存/锁</td></tr>
+        <tr><td>网络</td><td>王道 / 湖科大《计算机网络》</td><td>B站搜索「王道计算机网络」</td><td>重点 TCP/IP、HTTP/gRPC</td></tr>
+        <tr><td>深度学习</td><td>李沐《动手学深度学习》PyTorch 版</td><td>B站：space.bilibili.com/1567748478 ｜ 中文书：zh.d2l.ai</td><td>主线课程，跟着敲代码</td></tr>
+        <tr><td>深度学习</td><td>3Blue1Brown《神经网络》系列</td><td>B站官方中文账号搜索</td><td>直觉建立，动画讲解</td></tr>
+        <tr><td>大模型</td><td>李沐《论文精读》</td><td>B站搜索「李沐 论文精读 Attention」</td><td>Transformer 原文逐段精读</td></tr>
+        <tr><td>推理引擎</td><td>vLLM 中文文档</td><td>docs.vllm.com.cn</td><td>官方文档中文镜像，部署/配置查这里</td></tr>
+        <tr><td>推理引擎</td><td>vLLM 原理详解（2026 版）</td><td>bilibili.com/video/BV1yx5v6VEM5</td><td>10 分钟讲清内部机制，含部署实操</td></tr>
+        <tr><td>推理引擎</td><td>vLLM 推理优化入门到精通</td><td>bilibili.com/video/BV14YopBEEGs</td><td>KV Cache / PagedAttention / 吞吐优化</td></tr>
+        <tr><td>推理引擎</td><td>Docker 与 vLLM 部署实战精讲</td><td>bilibili.com/video/BV1yXju61E7z</td><td>GPU 容器化部署、OpenAI 兼容接口调试</td></tr>
+        <tr><td>CUDA</td><td>英伟达官方《现代CUDA编程》</td><td>bilibili.com/video/BV1YC5y6QEmz</td><td>官方课程中英字幕全集，线程层次/内存优化</td></tr>
+        <tr><td>CUDA</td><td>《CUDA 编程和 GPU 体系结构》从 0 到 1</td><td>bilibili.com/cheese/play/ss5564</td><td>例子驱动，附全部代码</td></tr>
+        <tr><td>CUDA</td><td>手写 CUDA 算子，让 PyTorch 提速 20 倍</td><td>blog.csdn.net/Yong_Qi2015/article/details/123415003</td><td>CSDN 实操案例，Shared Memory 优化</td></tr>
+        <tr><td>分布式训练</td><td>大模型分布式训练并行策略详解</td><td>cloud.tencent.com/developer/article/2693351</td><td>腾讯云社区，DP/PP/TP 中文详解</td></tr>
+        <tr><td>分布式训练</td><td>大模型预训练分布式并行技术（DP/PP/TP/EP/SP）</td><td>blog.csdn.net/Jmilk/article/details/155017798</td><td>CSDN 原理长文</td></tr>
+        <tr><td>分布式训练</td><td>手撸大模型的分布式训练</td><td>cnblogs.com/fangpin/p/19234725</td><td>博客园，用比喻讲透 DDP</td></tr>
+        <tr><td>分布式训练</td><td>DeepSpeed 官方文档</td><td>deepspeed.ai/tutorials</td><td>英文但权威，ZeRO 教程必读</td></tr>
+        <tr><td>分布式训练</td><td>CoLLiE 并行策略中文文档</td><td>openlmlab-collie.readthedocs.io/zh-cn/latest/tutorials/collie-tutorial-6-parallel.html</td><td>开源社区中文 3D 并行教程</td></tr>
+        <tr><td>求职</td><td>牛客网 AI Infra 面经</td><td>nowcoder.com</td><td>岗位面经 + 题库</td></tr>
+        <tr><td>综合</td><td>汇尘轩《AI Infra 软核教程》</td><td>kirigaya.cn/blog/article?seq=384</td><td>国内博客深度长文，讲推理优化技术脉络</td></tr>
+        <tr><td>综合</td><td>脉脉《AI Infra 2025 最全岗位分类》</td><td>maimai.cn/article/detail?efid=cDKucyqe6KKZsUDIZRao5w&amp;fid=1923220496</td><td>7 大岗位分类 + 转型路径</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===== 视图：Footer ===== -->
+<footer>
+  <div class="wrap">
+    <p><b>说明：</b>本学习路线基于 2026-09 公开岗位信息（Boss直聘 / 腾讯 / 小米 / 上海AI实验室等）整理，检索时间 2026-09-20；方向建议为综合判断，供参考。勾选进度仅保存在本机浏览器（localStorage），清除浏览器数据会丢失。</p>
+    <p style="margin-top:8px">参考：<a href="https://docs.vllm.com.cn/en/latest/getting_started/quickstart/" target="_blank" rel="noopener">vLLM 中文文档</a> · <a href="https://maimai.cn/article/detail?efid=cDKucyqe6KKZsUDIZRao5w&fid=1923220496" target="_blank" rel="noopener">脉脉 AI Infra 岗位分类</a> · <a href="https://kirigaya.cn/blog/article?seq=384" target="_blank" rel="noopener">汇尘轩 AI Infra 软核教程</a></p>
+    <p style="margin-top:8px">本页面由 AI 生成 · AI Infra 推理优化方向 · 9 个月学习路线 · 2026-09-20</p>
+  </div>
+</footer>
+
+<button class="backtop" id="backTop" title="返回顶部" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+(function(){
+  var KEY = 'ainfra-rd-';
+  function refresh(id){
+    var pre = id.split('-')[0];
+    var group = document.getElementById(pre);
+    if (!group) return;
+    var boxes = group.querySelectorAll('input[type=checkbox]');
+    var done = 0;
+    for (var i = 0; i < boxes.length; i++) { if (boxes[i].checked) done++; }
+    var cnt = document.getElementById('cnt' + pre);
+    if (cnt) cnt.textContent = done + '/' + boxes.length;
+  }
+  function save(id){
+    var el = document.getElementById(id);
+    if (!el) return;
+    try { localStorage.setItem(KEY + id, el.checked ? '1' : '0'); } catch(e) {}
+    refresh(id);
+  }
+  var boxes = document.querySelectorAll('.chk input[type=checkbox]');
+  for (var i = 0; i < boxes.length; i++) {
+    (function(b){
+      try { if (localStorage.getItem(KEY + b.id) === '1') b.checked = true; } catch(e) {}
+      b.addEventListener('change', function(){ save(b.id); });
+      refresh(b.id);
+    })(boxes[i]);
+  }
+})();
+</script>
+</body>
+</html>
