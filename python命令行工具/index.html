@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>logtool — 日志分析与文件批处理命令行工具</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B1017'/%3E%3Cpath d='M8 11l6 5-6 5M17 21h7' stroke='%236EE7A8' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://miaoda.feishu.cn">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#0B1017;
+    --bg-soft:#0D1420;
+    --panel:#121A24;
+    --panel-2:#0F1620;
+    --border:#1F2C3B;
+    --border-soft:#1A2431;
+    --text:#E8EEF5;
+    --muted:#93A1B3;
+    --muted-2:#6B7A8D;
+    --green:#6EE7A8;
+    --cyan:#63C7F6;
+    --amber:#F2B544;
+    --red:#F8706B;
+    --mono:'JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+    --sans:'Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,-apple-system,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:var(--sans);
+    background:
+      radial-gradient(1100px 480px at 18% -10%, rgba(110,231,168,.07), transparent 60%),
+      radial-gradient(900px 420px at 88% -6%, rgba(99,199,246,.06), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:rgba(110,231,168,.25)}
+
+  /* ===== 导航 ===== */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(11,16,23,.82);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .nav-inner{
+    max-width:1080px;margin:0 auto;padding:14px 24px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:.2px}
+  .brand svg{flex:none}
+  .brand .dot{color:var(--green)}
+  nav{display:flex;gap:26px}
+  nav a{
+    color:var(--muted);text-decoration:none;font-size:14px;
+    transition:color .18s;
+  }
+  nav a:hover{color:var(--text)}
+
+  /* ===== Hero ===== */
+  .hero{
+    max-width:1080px;margin:0 auto;padding:88px 24px 72px;
+    display:grid;grid-template-columns:1fr 1.05fr;gap:56px;align-items:center;
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--mono);font-size:12.5px;color:var(--green);
+    border:1px solid rgba(110,231,168,.28);border-radius:999px;
+    padding:5px 14px;margin-bottom:20px;background:rgba(110,231,168,.06);
+  }
+  .eyebrow .pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.6s infinite}
+  @keyframes blink{0%,60%{opacity:1}61%,100%{opacity:.15}}
+  h1{
+    font-size:42px;line-height:1.24;font-weight:700;letter-spacing:-.5px;
+  }
+  h1 .accent{
+    color:transparent;background:linear-gradient(92deg,var(--green),var(--cyan));
+    -webkit-background-clip:text;background-clip:text;
+  }
+  .hero p.lead{
+    margin-top:18px;color:var(--muted);font-size:16.5px;max-width:46ch;
+  }
+  .cta-row{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:11px 22px;border-radius:9px;font-size:14.5px;font-weight:500;
+    text-decoration:none;transition:transform .15s, box-shadow .15s, background .15s;
+  }
+  .btn-primary{background:var(--green);color:#08121C}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(110,231,168,.22)}
+  .btn-ghost{background:var(--panel);color:var(--text);border:1px solid var(--border)}
+  .btn-ghost:hover{border-color:var(--muted-2)}
+  .hero-meta{
+    margin-top:34px;display:flex;gap:28px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:12.5px;color:var(--muted-2);
+  }
+  .hero-meta b{color:var(--text);font-weight:500}
+
+  /* ===== 终端窗口 ===== */
+  .term{
+    background:var(--panel-2);border:1px solid var(--border);border-radius:12px;
+    overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.45);
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:8px;padding:11px 16px;
+    background:#151D27;border-bottom:1px solid var(--border-soft);
+  }
+  .term-bar .t-title{
+    margin-left:8px;font-family:var(--mono);font-size:12px;color:var(--muted-2);
+  }
+  .term-bar .dots{display:flex;gap:6px;margin-left:auto}
+  .term-bar .dots i{width:10px;height:10px;border-radius:50%;display:block}
+  .term-bar .dots i:nth-child(1){background:#F8706B}
+  .term-bar .dots i:nth-child(2){background:#F2B544}
+  .term-bar .dots i:nth-child(3){background:#6EE7A8}
+  .term-body{
+    padding:20px 20px 22px;font-family:var(--mono);font-size:13.5px;line-height:1.85;
+    overflow-x:auto;white-space:pre;
+  }
+  .term-body .prompt{color:var(--green)}
+  .term-body .cmd{color:var(--text)}
+  .term-body .dim{color:var(--muted-2)}
+  .lvl-info{color:var(--cyan)}
+  .lvl-error{color:var(--red)}
+  .lvl-warn{color:var(--amber)}
+  .lvl-debug{color:#9AA7B8}
+  .lvl-critical{color:var(--red);font-weight:700}
+  .lvl-fatal{color:var(--red);font-weight:700}
+  .cursor{
+    display:inline-block;width:8px;height:15px;background:var(--green);
+    vertical-align:-2px;animation:blink 1.1s steps(1) infinite;
+  }
+
+  /* ===== 通用区块 ===== */
+  section{max-width:1080px;margin:0 auto;padding:72px 24px}
+  .sec-head{margin-bottom:40px}
+  .sec-head .kicker{
+    font-family:var(--mono);font-size:12.5px;color:var(--cyan);letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:10px;
+  }
+  h2{font-size:28px;font-weight:700;letter-spacing:-.3px}
+  .sec-head p{margin-top:8px;color:var(--muted);font-size:15px;max-width:56ch}
+
+  /* ===== 特性 ===== */
+  .features{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .feat{
+    background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;
+    padding:24px 20px;transition:border-color .18s, transform .18s;
+  }
+  .feat:hover{border-color:var(--border);transform:translateY(-2px)}
+  .feat .ico{
+    width:38px;height:38px;border-radius:9px;display:grid;place-items:center;
+    margin-bottom:16px;font-family:var(--mono);font-size:16px;font-weight:700;
+  }
+  .ico-green{background:rgba(110,231,168,.12);color:var(--green)}
+  .ico-cyan{background:rgba(99,199,246,.12);color:var(--cyan)}
+  .ico-amber{background:rgba(242,181,68,.12);color:var(--amber)}
+  .ico-red{background:rgba(248,112,107,.12);color:var(--red)}
+  .feat h3{font-size:15.5px;font-weight:700;margin-bottom:8px}
+  .feat p{font-size:13.5px;color:var(--muted);line-height:1.65}
+  .banner{
+    margin-top:16px;background:linear-gradient(92deg,rgba(110,231,168,.09),rgba(99,199,246,.07));
+    border:1px solid rgba(110,231,168,.22);border-radius:12px;
+    padding:16px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    font-size:14px;
+  }
+  .banner .tag{
+    font-family:var(--mono);font-size:12px;color:#08121C;background:var(--green);
+    padding:3px 10px;border-radius:6px;font-weight:700;flex:none;
+  }
+  .banner span{color:var(--text)}
+
+  /* ===== 命令文档 ===== */
+  .cmd-group{background:var(--panel);border:1px solid var(--border-soft);border-radius:14px;overflow:hidden;margin-bottom:20px}
+  .cmd-head{
+    display:flex;align-items:center;gap:12px;padding:16px 22px;
+    border-bottom:1px solid var(--border-soft);background:var(--panel-2);
+  }
+  .cmd-head .badge{
+    font-family:var(--mono);font-size:13px;font-weight:700;padding:3px 12px;border-radius:6px;
+  }
+  .badge-log{background:rgba(99,199,246,.14);color:var(--cyan)}
+  .badge-file{background:rgba(110,231,168,.14);color:var(--green)}
+  .cmd-head .desc{font-size:13.5px;color:var(--muted)}
+  .cmd-row{
+    display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
+    gap:20px;padding:18px 22px;border-bottom:1px solid var(--border-soft);
+    align-items:start;
+  }
+  .cmd-row:last-child{border-bottom:none}
+  .cmd-row .name{font-family:var(--mono);font-size:13.5px;color:var(--text);line-height:1.8}
+  .cmd-row .name .sub{color:var(--muted-2)}
+  .cmd-row .name code{color:var(--green)}
+  .cmd-row .name .flag{color:var(--cyan)}
+  .cmd-row .what{font-size:13.5px;color:var(--muted);line-height:1.7}
+  .cmd-row .what b{color:var(--text);font-weight:500}
+  .params{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .params .p{
+    font-family:var(--mono);font-size:11.5px;color:var(--muted);
+    border:1px solid var(--border);border-radius:5px;padding:2px 8px;
+  }
+  .params .p.req{color:var(--amber);border-color:rgba(242,181,68,.3)}
+  .hint{
+    margin-top:18px;padding:14px 18px;border-radius:10px;
+    background:rgba(242,181,68,.07);border:1px solid rgba(242,181,68,.25);
+    font-size:13.5px;color:var(--muted);
+  }
+  .hint b{color:var(--amber);font-weight:500}
+
+  /* ===== 快速上手 ===== */
+  .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;counter-reset:step}
+  .step{
+    background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;
+    padding:24px 22px;position:relative;min-width:0;
+  }
+  .step::before{
+    counter-increment:step;content:"0" counter(step);
+    font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green);
+  }
+  .step h3{font-size:15.5px;font-weight:700;margin:12px 0 8px}
+  .step p{font-size:13.5px;color:var(--muted);margin-bottom:12px}
+  .step pre{
+    background:var(--panel-2);border:1px solid var(--border-soft);border-radius:8px;
+    padding:11px 14px;font-family:var(--mono);font-size:12.5px;line-height:1.75;
+    overflow-x:auto;color:var(--text);white-space:pre;
+  }
+  .step pre .prompt{color:var(--green)}
+  .step pre .dim{color:var(--muted-2)}
+
+  /* ===== Footer ===== */
+  footer{
+    border-top:1px solid var(--border-soft);
+    padding:34px 24px;text-align:center;
+    color:var(--muted-2);font-size:13px;
+  }
+  footer .mono{font-family:var(--mono);color:var(--muted)}
+
+  /* ===== 响应式 ===== */
+  @media (max-width:960px){
+    .hero{grid-template-columns:1fr;gap:40px;padding-top:56px}
+    .features{grid-template-columns:repeat(2,1fr)}
+    .steps{grid-template-columns:minmax(0,1fr)}
+  }
+  @media (max-width:640px){
+    nav{display:none}
+    h1{font-size:31px}
+    section{padding:56px 18px}
+    .hero{padding:48px 18px 56px}
+    .features{grid-template-columns:1fr}
+    .cmd-row{grid-template-columns:1fr;gap:10px}
+    .hero-meta{gap:16px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 视图：导航 ===== -->
+<header>
+  <div class="nav-inner">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <rect width="32" height="32" rx="7" fill="#121A24" stroke="#1F2C3B"/>
+        <path d="M9 12l5.5 4.5L9 21M17.5 21H23" stroke="#6EE7A8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>logtool<span class="dot">_</span></span>
+    </div>
+    <nav>
+      <a href="#features">功能特性</a>
+      <a href="#commands">命令文档</a>
+      <a href="#quickstart">快速上手</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ===== 视图：Hero ===== -->
+<section class="hero" id="top">
+  <div>
+    <span class="eyebrow"><span class="pulse"></span>PYTHON CLI · 零依赖 · 纯标准库</span>
+    <h1>日志分析与<br>文件批量处理的<span class="accent">命令行工具箱</span></h1>
+    <p class="lead">logtool 是一个单文件的 Python 命令行工具：统计日志级别、筛选错误、关键字检索，并支持批量重命名、改后缀与清理文件。无需安装任何依赖，下载即可运行。</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#quickstart">快速上手</a>
+      <a class="btn btn-ghost" href="#commands">查看全部命令</a>
+    </div>
+    <div class="hero-meta">
+      <span>Python <b>3.6+</b></span>
+      <span>标准库 <b>5 个模块</b></span>
+      <span>子命令 <b>6 条</b></span>
+    </div>
+  </div>
+
+  <div class="term" aria-label="logtool 使用示例终端窗口">
+    <div class="term-bar">
+      <span class="t-title">logtool — stats 示例</span>
+      <span class="dots"><i></i><i></i><i></i></span>
+    </div>
+    <div class="term-body"><span class="prompt">$ </span><span class="cmd">python logtool.py log stats app.log</span>
+文件: app.log
+总行数: 11
+<span class="lvl-info">INFO</span>      <span class="dim">4</span>
+<span class="lvl-error">ERROR</span>     <span class="dim">2</span>
+<span class="lvl-warn">WARN</span>      <span class="dim">2</span>
+<span class="lvl-debug">DEBUG</span>     <span class="dim">1</span>
+<span class="lvl-critical">CRITICAL</span>  <span class="dim">1</span>
+<span class="lvl-fatal">FATAL</span>     <span class="dim">1</span>
+<span class="prompt">$ </span><span class="cursor"></span></div>
+  </div>
+</section>
+
+<!-- ===== 视图：功能特性 ===== -->
+<section id="features">
+  <div class="sec-head">
+    <div class="kicker">Features</div>
+    <h2>两大能力，六条命令</h2>
+    <p>日志分析帮你快速读懂日志，文件处理帮你批量打理目录，所有操作都可先预览、后执行。</p>
+  </div>
+  <div class="features">
+    <div class="feat">
+      <div class="ico ico-green">Σ</div>
+      <h3>日志级别统计</h3>
+      <p>统计 DEBUG 至 FATAL 全级别分布与总行数，一眼看清日志的严重程度构成。</p>
+    </div>
+    <div class="feat">
+      <div class="ico ico-red">!</div>
+      <h3>错误日志筛选</h3>
+      <p>精准挑出 ERROR / CRITICAL / FATAL 行并附带行号，快速定位问题现场。</p>
+    </div>
+    <div class="feat">
+      <div class="ico ico-cyan">#</div>
+      <h3>关键字检索</h3>
+      <p>大小写不敏感的关键字匹配，可限制输出行数，排查"timeout"这类高频问题很顺手。</p>
+    </div>
+    <div class="feat">
+      <div class="ico ico-amber">⇄</div>
+      <h3>文件批量处理</h3>
+      <p>递归匹配目录：批量重命名、统一修改后缀、批量清理，一条命令搞定。</p>
+    </div>
+  </div>
+  <div class="banner">
+    <span class="tag">安全</span>
+    <span>文件类操作全部支持 <b style="font-family:var(--mono);color:var(--green)">--dry-run</b> 预览；删除文件必须显式加 <b style="font-family:var(--mono);color:var(--green)">-f</b> 才真正执行，误操作风险降到最低。</span>
+  </div>
+</section>
+
+<!-- ===== 视图：命令文档 ===== -->
+<section id="commands">
+  <div class="sec-head">
+    <div class="kicker">Commands</div>
+    <h2>命令文档</h2>
+    <p>两级子命令结构：<b style="font-family:var(--mono);color:var(--text)">log</b> 处理日志，<b style="font-family:var(--mono);color:var(--text)">file</b> 处理文件。运行 <span style="font-family:var(--mono);color:var(--green)">python logtool.py --help</span> 可随时查看帮助。</p>
+  </div>
+
+  <div class="cmd-group">
+    <div class="cmd-head">
+      <span class="badge badge-log">log</span>
+      <span class="desc">日志分析：统计、筛选、检索</span>
+    </div>
+
+    <div class="cmd-row">
+      <div class="name">
+        <code>log stats</code> <span class="sub">&lt;file&gt;</span>
+        <div class="params"><span class="p req">file 日志文件路径</span></div>
+      </div>
+      <div class="what">统计日志文件的总行数与各级别（DEBUG / INFO / WARN / ERROR / CRITICAL / FATAL）出现次数，按数量从高到低输出。</div>
+    </div>
+
+    <div class="cmd-row">
+      <div class="name">
+        <code>log error</code> <span class="sub">&lt;file&gt;</span>
+        <div class="params"><span class="p req">file 日志文件路径</span></div>
+      </div>
+      <div class="what">筛选并输出 ERROR、CRITICAL、FATAL 三种错误级日志，每行附带原始行号，结尾汇总错误总数。</div>
+    </div>
+
+    <div class="cmd-row">
+      <div class="name">
+        <code>log grep</code> <span class="sub">&lt;file&gt;</span> <span class="flag">-k</span> <span class="sub">&lt;keyword&gt;</span> <span class="flag">-n</span> <span class="sub">&lt;limit&gt;</span>
+        <div class="params"><span class="p req">file 日志文件路径</span><span class="p req">-k 匹配关键字</span><span class="p">-n 限制输出行数</span></div>
+      </div>
+      <div class="what">按关键字匹配日志行（大小写不敏感），带行号输出；用 <b>-n</b> 可限制最大输出条数。</div>
+    </div>
+  </div>
+
+  <div class="cmd-group">
+    <div class="cmd-head">
+      <span class="badge badge-file">file</span>
+      <span class="desc">文件批量处理：重命名、改后缀、清理</span>
+    </div>
+
+    <div class="cmd-row">
+      <div class="name">
+        <code>file rename</code> <span class="sub">&lt;dir&gt;</span> <span class="flag">-r</span> <span class="sub">&lt;OLD&gt; &lt;NEW&gt;</span> <span class="flag">-p</span> <span class="sub">&lt;pattern&gt;</span>
+        <div class="params"><span class="p req">dir 目录路径</span><span class="p req">-r 旧字符串 → 新字符串</span><span class="p">-p 匹配模式</span><span class="p">--dry-run 仅预览</span></div>
+      </div>
+      <div class="what">递归查找目录下匹配的文件，将文件名中的旧字符串替换为新字符串；加 <b>--dry-run</b> 只打印预览不改名。</div>
+    </div>
+
+    <div class="cmd-row">
+      <div class="name">
+        <code>file ext</code> <span class="sub">&lt;dir&gt;</span> <span class="flag">-e</span> <span class="sub">&lt;.ext&gt;</span> <span class="flag">-p</span> <span class="sub">&lt;pattern&gt;</span>
+        <div class="params"><span class="p req">dir 目录路径</span><span class="p req">-e 新后缀（如 .log）</span><span class="p">-p 匹配模式</span><span class="p">--dry-run 仅预览</span></div>
+      </div>
+      <div class="what">批量统一修改文件后缀（支持省略点号自动补全），例如把一批 <b>.txt</b> 统一改为 <b>.log</b>。</div>
+    </div>
+
+    <div class="cmd-row">
+      <div class="name">
+        <code>file clean</code> <span class="sub">&lt;dir&gt;</span> <span class="flag">-f</span> <span class="flag">-p</span> <span class="sub">&lt;pattern&gt;</span>
+        <div class="params"><span class="p req">dir 目录路径</span><span class="p req">-f 真正删除</span><span class="p">-p 匹配模式</span><span class="p">--dry-run 仅预览</span></div>
+      </div>
+      <div class="what">批量删除匹配的文件。必须显式加 <b>-f</b> 才会真正删除；不加则只列出待删除项，配合 <b>--dry-run</b> 可安全预览。</div>
+    </div>
+  </div>
+
+  <div class="hint"><b>提示</b>：文件匹配基于递归搜索（<span style="font-family:var(--mono)">rglob</span>），<span style="font-family:var(--mono)">-p</span> 支持 <span style="font-family:var(--mono)">*.txt</span> 等通配符。删除与改名都是不可逆操作，养成先加 <span style="font-family:var(--mono)">--dry-run</span> 预览的习惯。</div>
+</section>
+
+<!-- ===== 视图：快速上手 ===== -->
+<section id="quickstart">
+  <div class="sec-head">
+    <div class="kicker">Quick Start</div>
+    <h2>三步上手</h2>
+    <p>整个工具只有一个文件，没有任何安装步骤。</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <h3>获取工具</h3>
+      <p>将 logtool.py 放入你的项目目录，或直接使用仓库自带的 app.log 示例日志体验。</p>
+      <pre><span class="prompt">$ </span>python logtool.py --help</pre>
+    </div>
+    <div class="step">
+      <h3>分析日志</h3>
+      <p>统计级别分布、筛选错误、检索关键字，三分钟读懂一份日志。</p>
+      <pre><span class="prompt">$ </span>python logtool.py log error app.log
+<span class="dim">5: ... ERROR timeout when calling api
+8: ... CRITICAL db connection lost
+总计: 4 条错误日志</span></pre>
+    </div>
+    <div class="step">
+      <h3>批量处理文件</h3>
+      <p>先预览、再执行，批量重命名与改后缀同样简单。</p>
+      <pre><span class="prompt">$ </span>python logtool.py file ext . -e .log -p "*.txt" --dry-run
+<span class="dim">[预览]: readme.txt -> readme.log</span></pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>logtool — <span class="mono">python logtool.py</span> · 日志分析与文件批处理命令行工具</div>
+  <div style="margin-top:6px">基于 Python 标准库构建 · 单文件 · 零依赖</div>
+</footer>
+
+</body>
+</html>

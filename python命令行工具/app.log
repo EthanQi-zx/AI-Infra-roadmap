@@ -1,0 +1,11 @@
+﻿2026-01-01 10:00:00 INFO  service started
+2026-01-01 10:00:01 DEBUG loading config
+2026-01-01 10:00:02 INFO  connected to db
+2026-01-01 10:00:03 WARNING disk usage 80%
+2026-01-01 10:00:04 ERROR timeout when calling api
+2026-01-01 10:00:05 INFO  retrying...
+2026-01-01 10:00:06 ERROR timeout again
+2026-01-01 10:00:07 CRITICAL db connection lost
+2026-01-01 10:00:08 INFO  recovered
+2026-01-01 10:00:09 WARN  slow query detected
+2026-01-01 10:00:10 FATAL shutting down
